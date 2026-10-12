@@ -178,7 +178,18 @@ runs:
             echo "[+] Coccinelle is installed."
 
             # Get MKDTBO tool to System
-            git clone --depth=1 https://android.googlesource.com/platform/system/libufdt $GITHUB_WORKSPACE/mkdtbo
+            for clone_try in 1 2 3; do
+              rm -rf "$GITHUB_WORKSPACE/mkdtbo"
+              if git clone --depth=1 https://android.googlesource.com/platform/system/libufdt "$GITHUB_WORKSPACE/mkdtbo"; then
+                break
+              fi
+              if [ "$clone_try" -eq 3 ]; then
+                echo "[-] Failed to clone libufdt after 3 attempts."
+                false
+              fi
+              echo "[-] Clone libufdt failed (attempt $clone_try), retrying in 5 seconds..."
+              sleep 5
+            done
             mv $GITHUB_WORKSPACE/mkdtbo/utils/src/* $GITHUB_WORKSPACE/mkdtbo/
             chmod +x "$GITHUB_WORKSPACE/mkdtbo/mkdtboimg.py"
             sudo ln -sfn "$GITHUB_WORKSPACE/mkdtbo/mkdtboimg.py" /usr/bin/mkdtboimg
